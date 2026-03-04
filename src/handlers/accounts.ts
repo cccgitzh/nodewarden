@@ -527,7 +527,11 @@ export async function handleRecoverTwoFactor(request: Request, env: Env): Promis
   const email = String(body.email || body.username || '').trim().toLowerCase();
   const masterPasswordHash = String(body.masterPasswordHash || body.password || '').trim();
   const recoveryCode = normalizeRecoveryCodeInput(String(body.recoveryCode || body.twoFactorToken || body.recovery_code || ''));
-  const recoverLimitKey = `${getClientIdentifier(request)}:recover-2fa:${email || 'unknown'}`;
+  const clientIdentifier = getClientIdentifier(request);
+  if (!clientIdentifier) {
+    return errorResponse('Client IP is required', 403);
+  }
+  const recoverLimitKey = `${clientIdentifier}:recover-2fa:${email || 'unknown'}`;
 
   const recoverAttemptCheck = await rateLimit.checkLoginAttempt(recoverLimitKey);
   if (!recoverAttemptCheck.allowed) {

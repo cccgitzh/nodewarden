@@ -38,6 +38,18 @@
     // Public (unauthenticated) request budget per IP per minute.
     // 公开（未认证）接口每 IP 每分钟请求配额。
     publicRequestsPerMinute: 60,
+    // Public read-only request budget per IP per minute.
+    // 公开只读接口每 IP 每分钟请求配额。
+    publicReadRequestsPerMinute: 120,
+    // Sensitive public/auth request budget per IP per minute.
+    // 敏感公开/认证接口每 IP 每分钟请求配额。
+    sensitivePublicRequestsPerMinute: 30,
+    // Register endpoint budget per IP per minute.
+    // 注册接口每 IP 每分钟请求配额。
+    registerRequestsPerMinute: 5,
+    // Refresh-token grant budget per IP per minute.
+    // refresh_token 授权每 IP 每分钟请求配额。
+    refreshTokenRequestsPerMinute: 30,
     // Fixed window size for API rate limiting in seconds.
     // API 限流固定窗口大小（秒）。
     apiWindowSeconds: 60,

@@ -107,6 +107,9 @@ export async function handleToken(request: Request, env: Env): Promise<Response>
 
   const grantType = body.grant_type;
   const clientIdentifier = getClientIdentifier(request);
+  if (!clientIdentifier) {
+    return identityErrorResponse('Client IP is required', 'invalid_request', 403);
+  }
 
   if (grantType === 'password') {
     // Login with password
@@ -297,7 +300,14 @@ export async function handleToken(request: Request, env: Env): Promise<Response>
     ).trim() || null;
     const password = String(body.password || '').trim() || null;
 
-    const result = await issueSendAccessToken(env, sendId, passwordHashB64, password);
+    const result = await issueSendAccessToken(
+      env,
+      sendId,
+      passwordHashB64,
+      password,
+      rateLimit,
+      `${clientIdentifier}:send-password`
+    );
     if ('error' in result) {
       return result.error;
     }
@@ -310,6 +320,18 @@ export async function handleToken(request: Request, env: Env): Promise<Response>
       unofficialServer: true,
     });
   } else if (grantType === 'refresh_token') {
+    const refreshLimit = await rateLimit.consumeBudget(
+      `${clientIdentifier}:identity-refresh`,
+      LIMITS.rateLimit.refreshTokenRequestsPerMinute
+    );
+    if (!refreshLimit.allowed) {
+      return identityErrorResponse(
+        `Rate limit exceeded. Try again in ${refreshLimit.retryAfterSeconds} seconds.`,
+        'TooManyRequests',
+        429
+      );
+    }
+
     // Refresh token
     const refreshToken = body.refresh_token;
     if (!refreshToken) {
